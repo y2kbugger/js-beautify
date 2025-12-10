@@ -404,6 +404,7 @@ The input below will remain unchanged after beautification:
 
 ```js
 // Use ignore when the content is not parsable in the current language, JavaScript in this case.
+// Use /* beautify ignore */ at the end of a line to ignore just that line.
 var a =  1;
 /* beautify ignore:start */
  {This is some strange{template language{using open-braces?

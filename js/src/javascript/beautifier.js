@@ -1462,8 +1462,30 @@ Beautifier.prototype.handle_dot = function(current_token) {
 };
 
 Beautifier.prototype.handle_unknown = function(current_token, preserve_statement_flags) {
-  this.print_token(current_token);
+  if (this._output.raw) {
+    this._output.add_raw_token(current_token);
+    return;
+  }
 
+  if (current_token.directives && current_token.directives.ignore === 'line') {
+    this.handle_whitespace_and_comments(current_token, preserve_statement_flags);
+    var newlines = current_token.newlines;
+    current_token.newlines = 0;
+    var previous_raw = this._output.raw;
+    if (!this._output.just_added_newline()) {
+      this.print_newline(false, preserve_statement_flags);
+    }
+    this._output.raw = true;
+    this.print_token(current_token);
+    this._output.raw = previous_raw;
+    current_token.newlines = newlines;
+    if (current_token.directives.newline_after) {
+      this.print_newline(false, preserve_statement_flags);
+    }
+    return;
+  }
+
+  this.print_token(current_token);
   if (current_token.text[current_token.text.length - 1] === '\n') {
     this.print_newline(false, preserve_statement_flags);
   }
