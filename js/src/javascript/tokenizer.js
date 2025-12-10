@@ -137,7 +137,8 @@ var Tokenizer = function(input_string, options) {
 Tokenizer.prototype = new BaseTokenizer();
 
 Tokenizer.prototype._is_comment = function(current_token) {
-  return current_token.type === TOKEN.COMMENT || current_token.type === TOKEN.BLOCK_COMMENT || current_token.type === TOKEN.UNKNOWN;
+  return (current_token.type === TOKEN.COMMENT || current_token.type === TOKEN.BLOCK_COMMENT || current_token.type === TOKEN.UNKNOWN) &&
+    !(current_token.directives && current_token.directives.ignore === 'line');
 };
 
 Tokenizer.prototype._is_opening = function(current_token) {
@@ -159,6 +160,27 @@ Tokenizer.prototype._reset = function() {
 Tokenizer.prototype._get_next_token = function(previous_token, open_token) { // jshint unused:false
   var token = null;
   this._readWhitespace();
+  var start_of_line = this._patterns.whitespace.newline_count || this._is_first_token();
+
+  // Skip inline ignore handling when producing raw output for tests.
+  if (start_of_line && !this._options.test_output_raw) {
+    var line_directives = directives_core.get_directives(this._input.peekUntilAfter(acorn.allLineBreaks));
+    if (line_directives && line_directives.ignore === 'line') {
+      var ignored = this._input.readUntilAfter(acorn.allLineBreaks);
+      line_directives.newline_after = ignored && ignored[ignored.length - 1] === '\n';
+      // Trim the trailing line ending from the ignored line so it can be reinserted uniformly later.
+      if (line_directives.newline_after) {
+        if (ignored[ignored.length - 2] === '\r') {
+          ignored = ignored.substring(0, ignored.length - 2);
+        } else {
+          ignored = ignored.substring(0, ignored.length - 1);
+        }
+      }
+      token = this._create_token(TOKEN.UNKNOWN, ignored);
+      token.directives = line_directives;
+      return token;
+    }
+  }
   var c = this._input.peek();
 
   if (c === null) {

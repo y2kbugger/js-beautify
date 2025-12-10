@@ -2777,6 +2777,32 @@ exports.test_data = {
         },
         { unchanged: "/* beautify ignore:start */  {asdklgh;y;+++;dd2d}    /* beautify ignore:end */" },
         {
+          comment: 'Directive: ignore line',
+          input: [
+            '{',
+            '    "hello": ${world} /* beautify ignore */',
+            '}',
+            'var b=2;'
+          ],
+          output: [
+            '{',
+            '    "hello": ${world} /* beautify ignore */',
+            '}',
+            'var b = 2;'
+          ]
+        },
+        {
+          comment: 'Directive: ignore line preserves spacing',
+          input: [
+            'var a    =    1; /* beautify ignore */',
+            'var b=2;'
+          ],
+          output: [
+            'var a    =    1; /* beautify ignore */',
+            'var b = 2;'
+          ]
+        },
+        {
           input_: "var a =  1;\n/* beautify ignore:start */\n   var a,,,{ 1;\n/*beautify ignore:end*/",
           output: "var a = 1;\n/* beautify ignore:start */\n   var a,,,{ 1;\n/*beautify ignore:end*/"
         },
